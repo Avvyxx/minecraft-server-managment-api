@@ -90,5 +90,44 @@ class MinecraftAPI(BaseHTTPRequestHandler):
             self.wfile.write(json.dumps(['Unkown path']).encode())
             self.send_response(200)
 
+    def do_POST(self):
+        path = pathlib.Path(self.path)
+
+        self.protocol_version = 'HTTP/1.0'
+        self.send_response(200)
+        self.send_header('Content-Type', 'application/json')
+
+        if len(path.parts) < 3:
+            self.end_headers()
+            self.wfile.write(json.dumpd(['fail']).encode())
+
+        if path.parts[1] == 'start':
+            # check if server is available
+            # check that its not running
+            # start with tmux detached session
+
+            server = path.parts[2]
+
+            if server in getAvailableMinecraftServers():
+                if server in getRunningMinecraftServers():
+                    # server is already running
+                    pass
+                else:
+                    # for now each server will run in a new session
+                    command = ['tmux', 'new-session', '-d', '-s', f'"{server} Minecraft Server"', f'/home/avvy/Minecraft-Servers/{server}/start.sh']
+
+                    result = subprocess.run(command, check=True)
+
+                    if result.returncode == 0:
+                        pass #success
+                    else:
+                        pass #fail
+            else:
+                # invalid server
+                pass
+        else:
+            # invalid path
+            pass
+
 server = HTTPServer(('0.0.0.0', 8000), MinecraftAPI)
 server.serve_forever()
