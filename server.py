@@ -18,10 +18,18 @@ def getRunningMinecraftServers():
     for java_process in getJavaProcesses():
         for arg in java_process.cmdline():
             if 'Minecraft-Servers' in arg:
-                minecraft_processes.append(java_process)
-                continue
+                server_name = getServerNameFromArg(arg)
+                minecraft_processes.append(server_name)
+                break
 
     return minecraft_processes
+
+def getServerNameFromArg(javaProcessArg):
+    path = pathlib.Path(javaProcessArg)
+
+    for i in range(len(path.parts)):
+        if path.parts[i] == 'Minecraft-Servers':
+            return path.parts[i + 1]
 
 # Returns list
 def getAvailableMinecraftServers():
@@ -64,14 +72,15 @@ class MinecraftAPI(BaseHTTPRequestHandler):
 
             print('yes')
 
+            self.protocol_version = 'HTTP/1.0'
             self.send_response(200)
+            self.send_header('Content-Type', 'application/json')
+            self.send_header('Content-Length', str(len(response_json)))
+            self.end_headers()
             self.wfile.write(response_json)
-
-        if path == '/start':
-            self.send_response(200)
 
         else:
             self.send_response(200)
 
-server = HTTPServer(('localhost', 8000), MinecraftAPI)
+server = HTTPServer(('0.0.0.0', 8000), MinecraftAPI)
 server.serve_forever()
