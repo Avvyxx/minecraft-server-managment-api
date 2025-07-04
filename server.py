@@ -52,34 +52,42 @@ class MinecraftAPI(BaseHTTPRequestHandler):
     def do_GET(self):
         path = pathlib.Path(self.path)
 
-        if path.parts[1] == 'list':
-            response_data = None
+        self.protocol_version = 'HTTP/1.0'
+        self.send_response(200)
+        self.send_header('Content-Type', 'application/json')
 
-            if path.parts[2] == 'status':
-                response_data = None
-            if path.parts[2] == 'stopped':
-                all = set(getAvailableMinecraftServers())
-                running = set(getRunningMinecraftServers())
-                response_data = list(all.difference(running))
-            if path.parts[2] == 'running':
-                response_data = getRunningMinecraftServers()
-            if path.parts[2] == 'available':
-                response_data = getAvailableMinecraftServers()
-            else:
-                print('wtf')
+        if len(path.parts) < 2:
+            self.end_headers()
+            self.wfile.write(json.dumps(['fail'].encode()))
+
+        if path.parts[1] == 'list':
+            response_data = []
+
+            all_servers = getAvailableMinecraftServers()
+            running_servers = getRunningMinecraftServers()
+
+            for server in all_servers:
+                server_data = {
+                    'name': server,
+                    'domain': server.lower() + '.avyx.home'
+                }
+
+                if server in running_servers:
+                    server_data['state'] = 'running'
+                else: # is stopped
+                    server_data['state'] = 'stopped'
+
+                response_data.append(server_data)
 
             response_json = json.dumps(response_data).encode()
 
-            print('yes')
-
-            self.protocol_version = 'HTTP/1.0'
-            self.send_response(200)
-            self.send_header('Content-Type', 'application/json')
             self.send_header('Content-Length', str(len(response_json)))
             self.end_headers()
             self.wfile.write(response_json)
 
         else:
+            self.end_headers()
+            self.wfile.write(json.dumps(['Unkown path']).encode())
             self.send_response(200)
 
 server = HTTPServer(('0.0.0.0', 8000), MinecraftAPI)
