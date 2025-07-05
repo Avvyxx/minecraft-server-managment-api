@@ -110,7 +110,7 @@ class MinecraftAPI(BaseHTTPRequestHandler):
                     self.wfile.write(json_response)
                 else:
                     # for now each server will run in a new session
-                    command = ['tmux', 'new-session', '-d', '-s', f'"{server} Minecraft Server"', f'/home/avvy/Minecraft-Servers/{server}/start.sh']
+                    command = ['tmux', 'new-session', '-d', '-s', server + '-Minecraft-Server', f'/home/avvy/Minecraft-Servers/{server}/start.sh']
 
                     result = subprocess.run(command, check=True)
 
