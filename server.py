@@ -46,8 +46,11 @@ class MinecraftAPI(BaseHTTPRequestHandler):
         self.send_header('Content-Type', 'application/json')
 
         if len(path.parts) < 2:
+            json_response = json.dumps(['fail']).encode()
+            self.send_header('Content-Length', str(len(json_response)))
             self.end_headers()
-            self.wfile.write(json.dumps(['fail'].encode()))
+            self.wfile.write(json_response)
+            return
 
         if path.parts[1] == 'list':
             response_data = []
@@ -72,9 +75,10 @@ class MinecraftAPI(BaseHTTPRequestHandler):
 
         else:
             # invalid path
+            json_response = json.dumps(['Unkown path']).encode()
             self.send_header('Content-Length', str(len(json_response)))
             self.end_headers()
-            self.wfile.write(json.dumps(['Unkown path']).encode())
+            self.wfile.write(json_response)
             self.send_response(200)
 
     def do_POST(self):
@@ -85,7 +89,7 @@ class MinecraftAPI(BaseHTTPRequestHandler):
         self.send_header('Content-Type', 'application/json')
 
         if len(path.parts) < 3:
-            json_response = json.dumpd(['fail']).encode()
+            json_response = json.dumps(['fail']).encode()
             self.send_header('Content-Length', str(len(json_response)))
             self.end_headers()
             self.wfile.write(json_response)
@@ -100,7 +104,7 @@ class MinecraftAPI(BaseHTTPRequestHandler):
             if server in getAvailableMinecraftServers():
                 if server in getRunningMinecraftServers():
                     # server is already running
-                    json_response = json.dumpd(['Server already started']).encode()
+                    json_response = json.dumps(['Server already started']).encode()
                     self.send_header('Content-Length', str(len(json_response)))
                     self.end_headers()
                     self.wfile.write(json_response)
@@ -111,20 +115,20 @@ class MinecraftAPI(BaseHTTPRequestHandler):
                     result = subprocess.run(command, check=True)
 
                     message = 'Server started' if result.returncode == 0 else 'Server startup failed'
-                    json_response = json.dumpd([message]).encode()
+                    json_response = json.dumps([message]).encode()
 
                     self.send_header('Content-Length', str(len(json_response)))
                     self.end_headers()
                     self.wfile.write(json_response)
             else:
                 # invalid server
-                json_response = json.dumpd(['Server doesnt exist']).encode()
+                json_response = json.dumps(['Server doesnt exist']).encode()
                 self.send_header('Content-Length', str(len(json_response)))
                 self.end_headers()
                 self.wfile(json_response)
         else:
             # invalid path
-            json_response = json.dumpd(['Uknown path']).encode()
+            json_response = json.dumps(['Uknown path']).encode()
             self.send_header('Content-Length', str(len(json_response)))
             self.end_headers()
             self.wfile.write(json_response)
