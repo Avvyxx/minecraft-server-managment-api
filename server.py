@@ -58,13 +58,9 @@ class MinecraftAPI(BaseHTTPRequestHandler):
             for server in all_servers:
                 server_data = {
                     'name': server,
-                    'domain': server.lower() + '.avyx.home'
+                    'domain': server.lower() + '.avyx.home',
+                    'state': 'running' if server in running_servers else 'stopped'
                 }
-
-                if server in running_servers:
-                    server_data['state'] = 'running'
-                else: # is stopped
-                    server_data['state'] = 'stopped'
 
                 response_data.append(server_data)
 
