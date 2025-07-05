@@ -37,17 +37,6 @@ def getAvailableMinecraftServers():
 
     return list(servers)
 
-def startServer(server_name):
-    if server_name.lower() in [name.lower() for name in getAvailableMinecraftServers()]:
-        # start server if not started
-        if server_name.lower() in getRunningMinecraftServers():
-            ...
-        else:
-            return 1
-    else:
-        return 0
-
-
 class MinecraftAPI(BaseHTTPRequestHandler):
     def do_GET(self):
         path = pathlib.Path(self.path)
@@ -86,6 +75,8 @@ class MinecraftAPI(BaseHTTPRequestHandler):
             self.wfile.write(response_json)
 
         else:
+            # invalid path
+            self.send_header('Content-Length', str(len(json_response)))
             self.end_headers()
             self.wfile.write(json.dumps(['Unkown path']).encode())
             self.send_response(200)
@@ -98,8 +89,10 @@ class MinecraftAPI(BaseHTTPRequestHandler):
         self.send_header('Content-Type', 'application/json')
 
         if len(path.parts) < 3:
+            json_response = json.dumpd(['fail']).encode()
+            self.send_header('Content-Length', str(len(json_response)))
             self.end_headers()
-            self.wfile.write(json.dumpd(['fail']).encode())
+            self.wfile.write(json_response)
 
         if path.parts[1] == 'start':
             # check if server is available
@@ -111,23 +104,37 @@ class MinecraftAPI(BaseHTTPRequestHandler):
             if server in getAvailableMinecraftServers():
                 if server in getRunningMinecraftServers():
                     # server is already running
-                    pass
+                    json_response = json.dumpd(['Server already started']).encode()
+                    self.send_header('Content-Length', str(len(json_response)))
+                    self.end_headers()
+                    self.wfile.write(json_response)
                 else:
                     # for now each server will run in a new session
                     command = ['tmux', 'new-session', '-d', '-s', f'"{server} Minecraft Server"', f'/home/avvy/Minecraft-Servers/{server}/start.sh']
 
                     result = subprocess.run(command, check=True)
 
+                    json_response = None
                     if result.returncode == 0:
-                        pass #success
+                        json_response = json.dumpd(['Server started']).encode()
                     else:
-                        pass #fail
+                        json_response = json.dumpd(['Server startup failed']).encode()
+
+                    self.send_header('Content-Length', str(len(json_response)))
+                    self.end_headers()
+                    self.wfile.write(json_response)
             else:
                 # invalid server
-                pass
+                json_response = json.dumpd(['Server doesnt exist']).encode()
+                self.send_header('Content-Length', str(len(json_response)))
+                self.end_headers()
+                self.wfile(json_response)
         else:
             # invalid path
-            pass
+            json_response = json.dumpd(['Uknown path']).encode()
+            self.send_header('Content-Length', str(len(json_response)))
+            self.end_headers()
+            self.wfile.write(json_response)
 
 server = HTTPServer(('0.0.0.0', 8000), MinecraftAPI)
 server.serve_forever()
