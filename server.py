@@ -110,11 +110,8 @@ class MinecraftAPI(BaseHTTPRequestHandler):
 
                     result = subprocess.run(command, check=True)
 
-                    json_response = None
-                    if result.returncode == 0:
-                        json_response = json.dumpd(['Server started']).encode()
-                    else:
-                        json_response = json.dumpd(['Server startup failed']).encode()
+                    message = 'Server started' if result.returncode == 0 else 'Server startup failed'
+                    json_response = json.dumpd([message]).encode()
 
                     self.send_header('Content-Length', str(len(json_response)))
                     self.end_headers()
