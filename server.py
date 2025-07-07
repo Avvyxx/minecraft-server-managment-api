@@ -114,6 +114,7 @@ class MinecraftAPI(BaseHTTPRequestHandler):
                     self.send_header('Content-Length', str(len(json_response)))
                     self.end_headers()
                     self.wfile.write(json_response)
+
                 else:
                     # for now each server will run in a new session
                     command = ['tmux', 'new-session', '-d', '-s', server + '-Minecraft-Server', f'/home/avvy/Minecraft-Servers/{server}/start.sh']
@@ -126,12 +127,13 @@ class MinecraftAPI(BaseHTTPRequestHandler):
                     self.send_header('Content-Length', str(len(json_response)))
                     self.end_headers()
                     self.wfile.write(json_response)
+
             else:
                 # invalid server
                 json_response = json.dumps(['Server doesnt exist']).encode()
                 self.send_header('Content-Length', str(len(json_response)))
                 self.end_headers()
-                self.wfile(json_response)
+                self.wfile.write(json_response)
 
         elif path.parts[1] == 'stop':
             server = path.parts[2]
