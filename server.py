@@ -73,6 +73,12 @@ class MinecraftAPI(BaseHTTPRequestHandler):
             self.end_headers()
             self.wfile.write(response_json)
 
+        elif path.parts[1] == 'ping':
+            json_response = json.dumps(['pong']).encode()
+            self.send_header('Content-Length', str(len(json_response)))
+            self.end_headers()
+            self.wfile.write(json_response)
+
         else:
             # invalid path
             json_response = json.dumps(['Unkown path']).encode()
@@ -126,6 +132,36 @@ class MinecraftAPI(BaseHTTPRequestHandler):
                 self.send_header('Content-Length', str(len(json_response)))
                 self.end_headers()
                 self.wfile(json_response)
+
+        elif path.parts[1] == 'stop':
+            server = path.parts[2]
+
+            if server in getAvailableMinecraftServers():
+                if server in getRunningMinecraftServers():
+                    # stop running server
+                    command = ['tmux', 'send-keys', '-t', server + '-Minecraft-Server', 'stop', 'ENTER']
+
+                    result = subprocess.run(command, check=True)
+
+                    message = 'Server stopped' if result.returncode == 0 else 'Server stop failed'
+                    json_response = json.dumps([message]).encode()
+
+                    self.send_header('Content-Length', str(len(json_response)))
+                    self.end_headers()
+                    self.wfile.write(json_response)
+
+                else:
+                    json_response = json.dumps(['Server already stopped']).encode()
+                    self.send_header('Content-Length', str(len(json_response)))
+                    self.end_headers()
+                    self.wfile.write(json_response)
+            else:
+                # invalid server
+                json_response = json.dumps(['Server does not exist']).encode()
+                self.send_header('Content-Length', str(len(json_response)))
+                self.end_headers()
+                self.wfile.write(json_response)
+
         else:
             # invalid path
             json_response = json.dumps(['Uknown path']).encode()
