@@ -130,7 +130,7 @@ class MinecraftAPI(BaseHTTPRequestHandler):
 
             else:
                 # invalid server
-                json_response = json.dumps(['Server doesnt exist']).encode()
+                json_response = json.dumps(['Server does not exist']).encode()
                 self.send_header('Content-Length', str(len(json_response)))
                 self.end_headers()
                 self.wfile.write(json_response)
